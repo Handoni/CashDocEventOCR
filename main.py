@@ -79,42 +79,42 @@ def load_upstage_doc_annotations_from_file(path):
     return {"annotations": anns, "image_url": image_url}
 
 
-def load_naver_annotations_from_file(json_path):
-    """naver.json 형식의 데이터를 파싱하여 annotation 정보와 이미지 URL을 포함한 dict를 반환"""
-    with open(json_path, "r", encoding="utf-8-sig") as f:
-        data = json.load(f)
-    annotations = []
-    for image_data in data.get("images", []):
-        for field in image_data.get("fields", []):
-            text = field.get("inferText", "")
-            vertices = field.get("boundingPoly", {}).get("vertices", [])
-            if vertices:
-                xs = [float(v.get("x", 0)) for v in vertices]
-                ys = [float(v.get("y", 0)) for v in vertices]
-                left = min(xs)
-                top = min(ys)
-                right = max(xs)
-                bottom = max(ys)
-                width = right - left
-                height = bottom - top
-                annotations.append(
-                    {
-                        "text": text,
-                        "left": left,
-                        "top": top,
-                        "width": width,
-                        "height": height,
-                    }
-                )
-    original_file = data.get("originalFileName", "")
-    image_type = data.get("imageType", "jpg")
-    image_url = f"/static/{original_file}.jpg" if original_file else ""
-    return {
-        "image_url": image_url,
-        "annotations": annotations,
-        "originalFileName": original_file,
-        "imageType": image_type,
-    }
+# def load_naver_annotations_from_file(json_path):
+#     """naver.json 형식의 데이터를 파싱하여 annotation 정보와 이미지 URL을 포함한 dict를 반환"""
+#     with open(json_path, "r", encoding="utf-8-sig") as f:
+#         data = json.load(f)
+#     annotations = []
+#     for image_data in data.get("images", []):
+#         for field in image_data.get("fields", []):
+#             text = field.get("inferText", "")
+#             vertices = field.get("boundingPoly", {}).get("vertices", [])
+#             if vertices:
+#                 xs = [float(v.get("x", 0)) for v in vertices]
+#                 ys = [float(v.get("y", 0)) for v in vertices]
+#                 left = min(xs)
+#                 top = min(ys)
+#                 right = max(xs)
+#                 bottom = max(ys)
+#                 width = right - left
+#                 height = bottom - top
+#                 annotations.append(
+#                     {
+#                         "text": text,
+#                         "left": left,
+#                         "top": top,
+#                         "width": width,
+#                         "height": height,
+#                     }
+#                 )
+#     original_file = data.get("originalFileName", "")
+#     image_type = data.get("imageType", "jpg")
+#     image_url = f"/static/{original_file}.jpg" if original_file else ""
+#     return {
+#         "image_url": image_url,
+#         "annotations": annotations,
+#         "originalFileName": original_file,
+#         "imageType": image_type,
+#     }
 
 
 def list_image_basenames():
@@ -146,14 +146,14 @@ async def compare_images(request: Request, imagename: str):
     next_name = basenames[current_idx + 1] if current_idx < len(basenames) - 1 else None
 
     up_path = os.path.join("data", f"{imagename}_upstage.json")
-    nv_path = os.path.join("data", f"{imagename}_naver.json")
+    # nv_path = os.path.join("data", f"{imagename}_naver.json")
     doc_path = os.path.join("data", f"{imagename}_upstage_doc.json")
 
-    if not all(os.path.exists(p) for p in (up_path, nv_path, doc_path)):
+    if not all(os.path.exists(p) for p in (up_path, doc_path)):
         raise HTTPException(404, "필요한 JSON 파일이 없습니다.")
 
     up_data = load_upstage_annotations_from_file(up_path)
-    nv_data = load_naver_annotations_from_file(nv_path)
+    # nv_data = load_naver_annotations_from_file(nv_path)
     doc_data = load_upstage_doc_annotations_from_file(doc_path)
 
     return templates.TemplateResponse(
@@ -161,7 +161,7 @@ async def compare_images(request: Request, imagename: str):
         {
             "request": request,
             "upstage": up_data,
-            "naver": nv_data,
+            # "naver": nv_data,
             "upstage_doc": doc_data,
             "prev_name": prev_name,
             "next_name": next_name,
