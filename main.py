@@ -6,7 +6,6 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import json
 import os
-from googletrans import Translator
 import urllib.request
 import uvicorn
 
@@ -179,4 +178,4 @@ async def translate_text(text: str):
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
