@@ -15,11 +15,11 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
-def load_upstage_annotations_from_file(json_path):
+def load_upstage_annotations_from_file(path):
     """try_upstage_document_ai.json 형식의 데이터를 파싱하여 annotation 리스트를 반환"""
-    with open(json_path, "r", encoding="utf-8") as f:
+    with open(path, "r", encoding="utf-8-sig") as f:
         data = json.load(f)
-    annotations = []
+    anns = []
     if "pages" in data:
         for page in data["pages"]:
             for line in page["lines"]:
@@ -38,7 +38,7 @@ def load_upstage_annotations_from_file(json_path):
                     bottom = max(ys)
                     width = right - left
                     height = bottom - top
-                    annotations.append(
+                    anns.append(
                         {
                             "text": text,
                             "left": left,
@@ -47,12 +47,41 @@ def load_upstage_annotations_from_file(json_path):
                             "height": height,
                         }
                     )
-    return annotations
+    image_url = f"/static/{os.path.splitext(os.path.basename(path))[0].replace('_upstage','')}.jpg"
+    return {"annotations": anns, "image_url": image_url}
+
+
+def load_upstage_doc_annotations_from_file(path):
+    with open(path, encoding="utf-8-sig") as f:
+        data = json.load(f)
+    anns = []
+    for el in data.get("elements", []):
+        text = el.get("content", {}).get("text", "").replace("\n", "  ")
+        if not text:
+            continue
+        coords = el.get("coordinates", [])
+        if len(coords) != 4:
+            continue
+        xs = [c["x"] for c in coords]
+        ys = [c["y"] for c in coords]
+        left, top, right, bottom = min(xs), min(ys), max(xs), max(ys)
+        anns.append(
+            {
+                "text": text,
+                "left_pct": left * 100,
+                "top_pct": top * 100,
+                "width_pct": (right - left) * 100,
+                "height_pct": (bottom - top) * 100,
+            }
+        )
+    # upstage_doc 은 원본 이미지 사용
+    image_url = f"/static/{os.path.splitext(os.path.basename(path))[0].replace('_upstage_doc','')}.jpg"
+    return {"annotations": anns, "image_url": image_url}
 
 
 def load_naver_annotations_from_file(json_path):
     """naver.json 형식의 데이터를 파싱하여 annotation 정보와 이미지 URL을 포함한 dict를 반환"""
-    with open(json_path, "r", encoding="utf-8") as f:
+    with open(json_path, "r", encoding="utf-8-sig") as f:
         data = json.load(f)
     annotations = []
     for image_data in data.get("images", []):
@@ -116,33 +145,24 @@ async def compare_images(request: Request, imagename: str):
     prev_name = basenames[current_idx - 1] if current_idx > 0 else None
     next_name = basenames[current_idx + 1] if current_idx < len(basenames) - 1 else None
 
-    # JSON 파일 경로 설정
-    upstage_json_path = os.path.join("data", f"{imagename}_upstage.json")
-    naver_json_path = os.path.join("data", f"{imagename}_naver.json")
+    up_path = os.path.join("data", f"{imagename}_upstage.json")
+    nv_path = os.path.join("data", f"{imagename}_naver.json")
+    doc_path = os.path.join("data", f"{imagename}_upstage_doc.json")
 
-    if not os.path.exists(upstage_json_path):
-        raise HTTPException(
-            status_code=404, detail="Upstage JSON 파일을 찾을 수 없습니다."
-        )
-    if not os.path.exists(naver_json_path):
-        raise HTTPException(
-            status_code=404, detail="Naver JSON 파일을 찾을 수 없습니다."
-        )
+    if not all(os.path.exists(p) for p in (up_path, nv_path, doc_path)):
+        raise HTTPException(404, "필요한 JSON 파일이 없습니다.")
 
-    upstage_annotations = load_upstage_annotations_from_file(upstage_json_path)
-    naver_data = load_naver_annotations_from_file(naver_json_path)
-
-    upstage_image_url = f"/static/{imagename}.jpg"
+    up_data = load_upstage_annotations_from_file(up_path)
+    nv_data = load_naver_annotations_from_file(nv_path)
+    doc_data = load_upstage_doc_annotations_from_file(doc_path)
 
     return templates.TemplateResponse(
         "index.html",
         {
             "request": request,
-            "upstage": {
-                "image_url": upstage_image_url,
-                "annotations": upstage_annotations,
-            },
-            "naver": naver_data,
+            "upstage": up_data,
+            "naver": nv_data,
+            "upstage_doc": doc_data,
             "prev_name": prev_name,
             "next_name": next_name,
         },
