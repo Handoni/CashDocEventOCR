@@ -198,7 +198,7 @@ async def translate_text(text: str, page: str, ocr_model: str, translate_model: 
                 )
         except Exception as e:
             return JSONResponse(content={"error": str(e)}, status_code=500)
-    elif translate_model == "upstage-translate-koen":
+    elif translate_model == "upstage-translation-koen":
         try:
             clinet = OpenAI(
                 api_key="up_3klEdFK7qwq5JOKBhHHKi5eGilHo3",
