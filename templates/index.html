@@ -26,6 +26,15 @@
             {% if next_name %}<a href="/compare/{{ next_name }}"
                 class="nav-btn">다음</a>{% endif %}
         </div>
+        <div style="margin: 20px 0;">
+            <label style="font-size:18px; margin-right:10px;">번역 모델 선택:</label>
+            <select id="translate-model" style="font-size:17px; padding:6px 12px;" onchange="localStorage.setItem('selectedTranslateModel', this.value)">
+                <option value="naver-papago">naver-papago</option>
+                <option value="upstage-solar-mini">upstage-solar-mini</option>
+                <option value="upstage-translation-koen">upstage-translation-koen</option>
+                <option value="gcp-translation">gcp-translation</option>
+            </select>
+        </div>
 
         <div class="images-container">
             <!-- Upstage (픽셀 좌표) -->
@@ -96,6 +105,11 @@
 
         /* 초기·리사이즈 시 BBox 재배치 */
         window.addEventListener('load', ()=>{
+            const savedModel = localStorage.getItem('selectedTranslateModel');
+            if (savedModel) {
+                const modelSelect = document.getElementById('translate-model');
+                modelSelect.value = savedModel;
+            }
             const upImg  = document.getElementById('upstage-img');
             const docImg = document.getElementById('doc-img');
 
@@ -109,6 +123,8 @@
 
         function showCombinedCaption(event, text, captionId) {
             const captionDiv = document.getElementById(captionId);
+            const selectedModel = document.getElementById("translate-model").value;
+
             captionDiv.style.display = "block";
             captionDiv.innerText = `원본: ${text}
 번역 중...`;
@@ -116,17 +132,21 @@
             captionDiv.style.top  = (parseInt(event.target.style.top) + parseInt(event.target.style.height) + 5) + "px";
             event.stopPropagation();
 
-            fetch('/translate?text=' + encodeURIComponent(text))
-                .then(res => res.json())
-                .then(data => {
-                    captionDiv.innerText = `원본: ${text}
+            fetch(
+                '/translate?text=' + encodeURIComponent(text) + 
+                '&page=' + encodeURIComponent(window.location.pathname.split('/')[2])+ 
+                '&ocr_model=' + encodeURIComponent(captionId.split('-')[1])
+                + '&translate_model=' + encodeURIComponent(selectedModel)
+            ).then(res => res.json())
+            .then(data => {
+                captionDiv.innerText = `원본: ${text}
 영어: ${data.translated}`;
-                })
-                .catch(err => {
-                    console.error('번역 에러:', err);
-                    captionDiv.innerText = `원본: ${text}
+            })
+            .catch(err => {
+                console.error('번역 에러:', err);
+                captionDiv.innerText = `원본: ${text}
 번역 실패`;
-                });
+            });
         };
 </script>
     </body>

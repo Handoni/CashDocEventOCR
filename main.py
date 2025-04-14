@@ -6,9 +6,12 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import json
 import os
+import urllib.request
 import uvicorn
 from openai import OpenAI
+from google.cloud import translate_v3
 
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "application_default_credentials.json"
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -56,7 +59,7 @@ def load_upstage_doc_annotations_from_file(path):
         data = json.load(f)
     anns = []
     for el in data.get("elements", []):
-        text = el.get("content", {}).get("text", "").replace("\n", "  ")
+        text = el.get("content", {}).get("text", "")
         if not text:
             continue
         coords = el.get("coordinates", [])
@@ -170,31 +173,134 @@ async def compare_images(request: Request, imagename: str):
 
 
 @app.get("/translate")
-async def translate_text(text: str):
-    try:
-        clinet = OpenAI(
-            api_key="up_3klEdFK7qwq5JOKBhHHKi5eGilHo3",
-            base_url="https://api.upstage.ai/v1",
-        )
+async def translate_text(text: str, page: str, ocr_model: str, translate_model: str):
+    if translate_model == "naver-papago":
+        try:
+            url = "https://naveropenapi.apigw.ntruss.com/nmt/v1/translation"
 
-        response = clinet.chat.completions.create(
-            model="translation-koen",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "당신은 병원 홍보 이미지에서 추출된 한국어 텍스트를 영어로 번역하는 AI입니다. 지침: 병원명 등의 고유명사는 그대로 유지하고, 나머지 텍스트는 자연스럽게 영어로 번역합니다. 예를 들어, '서울아산병원'은 'Seoul Asan Medical Center'로 번역합니다. 응답에 한글을 포함하지 마세요.",
-                },
-                {
-                    "role": "user",
-                    "content": text,
-                },
-            ],
-        )
-        return JSONResponse(
-            content={"translated": response.choices[0].message.content.strip()}
-        )
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+            data = f"source=ko&target=en&text={text}"
+            request = urllib.request.Request(url)
+            request.add_header("X-NCP-APIGW-API-KEY-ID", "ewwkpow2bp")
+            request.add_header(
+                "X-NCP-APIGW-API-KEY", "BoKHqYFmWNNIklbfoCFGchW1gDYLCBE95vbFGU35"
+            )
+            response = urllib.request.urlopen(request, data=data.encode("utf-8"))
+            response_code = response.getcode()
+
+            if response_code == 200:
+                response_body = response.read()
+                response_json = json.loads(response_body)
+                translated_text = response_json["message"]["result"]["translatedText"]
+                return JSONResponse(content={"translated": translated_text})
+            else:
+                return JSONResponse(
+                    content={"error": "Translation failed"}, status_code=response_code
+                )
+        except Exception as e:
+            return JSONResponse(content={"error": str(e)}, status_code=500)
+    elif translate_model == "upstage-translate-koen":
+        try:
+            clinet = OpenAI(
+                api_key="up_3klEdFK7qwq5JOKBhHHKi5eGilHo3",
+                base_url="https://api.upstage.ai/v1",
+            )
+            response = clinet.chat.completions.create(
+                model="translation-koen",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "당신은 병원 홍보 이미지에서 추출된 한국어 텍스트를 영어로 번역하는 AI입니다. 지침: 병원명 등의 고유명사는 그대로 유지하고, 나머지 텍스트는 자연스럽게 영어로 번역합니다. 예를 들어, '서울아산병원'은 'Seoul Asan Medical Center'로 번역합니다. 응답에 한글을 포함하지 마세요.",
+                    },
+                    {
+                        "role": "user",
+                        "content": text,
+                    },
+                ],
+            )
+            return JSONResponse(
+                content={
+                    "translated": (
+                        response.choices[0].message.content.strip()
+                        if response.choices[0].message.content
+                        else ""
+                    )
+                }
+            )
+        except Exception as e:
+            return JSONResponse(content={"error": str(e)}, status_code=500)
+    elif translate_model == "upstage-solar-mini":
+        try:
+            if ocr_model == "upstage":
+                anns = load_upstage_annotations_from_file(f"data/{page}_upstage.json")[
+                    "annotations"
+                ]
+            elif ocr_model == "doc":
+                anns = load_upstage_doc_annotations_from_file(
+                    f"data/{page}_upstage_doc.json"
+                )["annotations"]
+            else:
+                raise HTTPException(status_code=400, detail="Invalid model specified.")
+
+            data = [ann["text"] for ann in anns]
+
+            clinet = OpenAI(
+                api_key="up_3klEdFK7qwq5JOKBhHHKi5eGilHo3",
+                base_url="https://api.upstage.ai/v1",
+            )
+
+            response = clinet.chat.completions.create(
+                model="solar-mini",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "당신은 병원 홍보 이미지에서 추출된 한국어 텍스트를 영어로 번역하는 AI입니다. 지침: 병원명 등의 고유명사는 그대로 유지하고, 나머지 텍스트는 자연스럽게 영어로 번역합니다. 예를 들어, '서울아산병원'은 'Seoul Asan Medical Center'로 번역합니다. 응답에 한글을 포함하지 마세요. 전체 텍스트와 번역할 텍스트가 주어집니다. 전체 텍스트의 맥락을 고려해서, '번역할 텍스트만' 영어로 번역하세요. 응답에는 영어로 번역한 텍스트만 포함하고, 추가적인 정보는 제공하지 마세요.",
+                    },
+                    {
+                        "role": "user",
+                        "content": "--- 전체 텍스트 ---\n"
+                        + "\n".join(data)
+                        + "\n\n--- 번역할 텍스트 ---\n"
+                        + text,
+                    },
+                ],
+            )
+            return JSONResponse(
+                content={
+                    "translated": (
+                        response.choices[0].message.content.strip()
+                        if response.choices[0].message.content
+                        else ""
+                    )
+                }
+            )
+        except Exception as e:
+            print(e)
+            return JSONResponse(content={"error": str(e)}, status_code=500)
+    elif translate_model == "gcp-translation":
+        try:
+            clinet = translate_v3.TranslationServiceClient()
+            project_id = "761591073995"
+            parent = f"projects/{project_id}/locations/global"
+
+            response = clinet.translate_text(
+                contents=[text],
+                target_language_code="en-US",
+                parent=parent,
+                mime_type="text/plain",
+                source_language_code="ko-KR",
+            )
+            return JSONResponse(
+                content={
+                    "translated": (
+                        response.translations[0].translated_text.strip()
+                        if response.translations[0].translated_text
+                        else ""
+                    )
+                }
+            )
+        except Exception as e:
+            print(e)
+            return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
 if __name__ == "__main__":
