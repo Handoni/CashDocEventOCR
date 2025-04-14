@@ -6,8 +6,8 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import json
 import os
-import urllib.request
 import uvicorn
+from openai import OpenAI
 
 app = FastAPI()
 
@@ -172,27 +172,27 @@ async def compare_images(request: Request, imagename: str):
 @app.get("/translate")
 async def translate_text(text: str):
     try:
-        url = "https://naveropenapi.apigw.ntruss.com/nmt/v1/translation"
-
-        data = f"source=ko&target=en&text={text}"
-        request = urllib.request.Request(url)
-        request.add_header("X-NCP-APIGW-API-KEY-ID", "ewwkpow2bp")
-        request.add_header(
-            "X-NCP-APIGW-API-KEY", "BoKHqYFmWNNIklbfoCFGchW1gDYLCBE95vbFGU35"
+        clinet = OpenAI(
+            api_key="up_3klEdFK7qwq5JOKBhHHKi5eGilHo3",
+            base_url="https://api.upstage.ai/v1",
         )
 
-        response = urllib.request.urlopen(request, data=data.encode("utf-8"))
-        response_code = response.getcode()
-
-        if response_code == 200:
-            response_body = response.read()
-            response_json = json.loads(response_body)
-            translated_text = response_json["message"]["result"]["translatedText"]
-            return JSONResponse(content={"translated": translated_text})
-        else:
-            return JSONResponse(
-                content={"error": "Translation failed"}, status_code=response_code
-            )
+        response = clinet.chat.completions.create(
+            model="translation-koen",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "당신은 병원 홍보 이미지에서 추출된 한국어 텍스트를 영어로 번역하는 AI입니다. 지침: 병원명 등의 고유명사는 그대로 유지하고, 나머지 텍스트는 자연스럽게 영어로 번역합니다. 예를 들어, '서울아산병원'은 'Seoul Asan Medical Center'로 번역합니다. 응답에 한글을 포함하지 마세요.",
+                },
+                {
+                    "role": "user",
+                    "content": text,
+                },
+            ],
+        )
+        return JSONResponse(
+            content={"translated": response.choices[0].message.content.strip()}
+        )
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
