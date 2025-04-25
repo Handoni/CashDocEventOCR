@@ -1,5 +1,6 @@
 # main.py
 import glob
+import boto3
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -294,7 +295,7 @@ async def translate_text(text: str, page: str, ocr_model: str, translate_model: 
     elif translate_model == "gcp-translation":
         try:
             client = translate_v3.TranslationServiceClient()
-            project_id = "761591073995"
+            project_id = "vibrant-tiger-457903-n7"
             parent = f"projects/{project_id}/locations/global"
 
             response = client.translate_text(
@@ -313,6 +314,17 @@ async def translate_text(text: str, page: str, ocr_model: str, translate_model: 
                     )
                 }
             )
+        except Exception as e:
+            print(e)
+            return JSONResponse(content={"error": str(e)}, status_code=500)
+
+    elif translate_model == "aws-translate":
+        try:
+            client = boto3.client("translate", region_name="us-east-1")
+            response = client.translate_text(
+                Text=text, SourceLanguageCode="ko", TargetLanguageCode="en"
+            )
+            return JSONResponse(content={"translated": response["TranslatedText"]})
         except Exception as e:
             print(e)
             return JSONResponse(content={"error": str(e)}, status_code=500)
