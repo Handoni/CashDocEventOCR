@@ -10,6 +10,7 @@ import urllib.request
 import uvicorn
 from openai import OpenAI
 from google.cloud import translate_v3
+import httpx
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "application_default_credentials.json"
 app = FastAPI()
@@ -248,36 +249,45 @@ async def translate_text(text: str, page: str, ocr_model: str, translate_model: 
 
             data = [ann["text"] for ann in anns]
 
-            client = OpenAI(
-                api_key="up_3klEdFK7qwq5JOKBhHHKi5eGilHo3",
-                base_url="https://api.upstage.ai/v1",
-            )
+            # 메시지 구성
+            messages = [
+                {
+                    "role": "system",
+                    "content": "당신은 병원 홍보 이미지에서 추출된 한국어 텍스트를 영어로 번역하는 AI입니다. 지침: 병원명 등의 고유명사는 그대로 유지하고, 나머지 텍스트는 자연스럽게 영어로 번역합니다. 예를 들어, '서울아산병원'은 'Seoul Asan Medical Center'로 번역합니다. 응답에 한글을 포함하지 마세요. 전체 텍스트와 번역할 텍스트가 주어집니다. 전체 텍스트의 맥락을 고려해서, 반드시 '번역할 텍스트만' 영어로 번역하세요. 응답에는 영어로 번역한 텍스트만 포함하고, 추가적인 정보는 제공하지 마세요.",
+                },
+                {
+                    "role": "user",
+                    "content": "--- 전체 텍스트 ---\n"
+                    + "\n".join(data)
+                    + "\n\n--- 번역할 텍스트: 이 텍스트만 영어로 번역해서 응답하세요 ---\n"
+                    + text,
+                },
+            ]
 
-            response = client.chat.completions.create(
-                model="solar-mini",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "당신은 병원 홍보 이미지에서 추출된 한국어 텍스트를 영어로 번역하는 AI입니다. 지침: 병원명 등의 고유명사는 그대로 유지하고, 나머지 텍스트는 자연스럽게 영어로 번역합니다. 예를 들어, '서울아산병원'은 'Seoul Asan Medical Center'로 번역합니다. 응답에 한글을 포함하지 마세요. 전체 텍스트와 번역할 텍스트가 주어집니다. 전체 텍스트의 맥락을 고려해서, '번역할 텍스트만' 영어로 번역하세요. 응답에는 영어로 번역한 텍스트만 포함하고, 추가적인 정보는 제공하지 마세요.",
-                    },
-                    {
-                        "role": "user",
-                        "content": "--- 전체 텍스트 ---\n"
-                        + "\n".join(data)
-                        + "\n\n--- 번역할 텍스트 ---\n"
-                        + text,
-                    },
-                ],
-            )
-            return JSONResponse(
-                content={
-                    "translated": (
-                        response.choices[0].message.content.strip()
-                        if response.choices[0].message.content
-                        else ""
-                    )
+            async with httpx.AsyncClient() as client:
+                headers = {
+                    "Authorization": "Bearer up_3klEdFK7qwq5JOKBhHHKi5eGilHo3",
+                    "Content-Type": "application/json",
                 }
-            )
+                payload = {
+                    "model": "solar-mini",
+                    "messages": messages,
+                }
+                response = await client.post(
+                    "https://api.upstage.ai/v1/chat/completions",
+                    headers=headers,
+                    json=payload,
+                )
+
+                if response.status_code == 200:
+                    result = response.json()
+                    translated = result["choices"][0]["message"]["content"].strip()
+                    return JSONResponse(content={"translated": translated})
+                else:
+                    return JSONResponse(
+                        content={"error": response.text},
+                        status_code=response.status_code,
+                    )
         except Exception as e:
             print(e)
             return JSONResponse(content={"error": str(e)}, status_code=500)
