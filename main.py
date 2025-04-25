@@ -210,7 +210,7 @@ async def translate_text(text: str, page: str, ocr_model: str, translate_model: 
                 messages=[
                     {
                         "role": "system",
-                        "content": "당신은 병원 홍보 이미지에서 추출된 한국어 텍스트를 영어로 번역하는 AI입니다. 지침: 병원명 등의 고유명사는 그대로 유지하고, 나머지 텍스트는 자연스럽게 영어로 번역합니다. 예를 들어, '서울아산병원'은 'Seoul Asan Medical Center'로 번역합니다. 응답에 한글을 포함하지 마세요.",
+                        "content": "당신은 병원 홍보 이미지에서 추출된 한국어 텍스트를 영어로 번역하는 AI입니다. 지침: 병원명 등의 고유명사는 그대로 유지하고, 나머지 텍스트는 자연스럽게 영어로 번역합니다. 예를 들어, '서울아산병원'은 'Seoul Asan Medical Center'로 번역합니다. 응답에 한글을 **절대로 포함하지 마세요**.",
                     },
                     {
                         "role": "user",
