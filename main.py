@@ -156,6 +156,7 @@ async def compare_images(request: Request, imagename: str):
         raise HTTPException(404, "필요한 JSON 파일이 없습니다.")
 
     up_data = load_upstage_annotations_from_file(up_path)
+
     # nv_data = load_naver_annotations_from_file(nv_path)
     doc_data = load_upstage_doc_annotations_from_file(doc_path)
 
@@ -200,11 +201,11 @@ async def translate_text(text: str, page: str, ocr_model: str, translate_model: 
             return JSONResponse(content={"error": str(e)}, status_code=500)
     elif translate_model == "upstage-translation-koen":
         try:
-            clinet = OpenAI(
+            client = OpenAI(
                 api_key="up_3klEdFK7qwq5JOKBhHHKi5eGilHo3",
                 base_url="https://api.upstage.ai/v1",
             )
-            response = clinet.chat.completions.create(
+            response = client.chat.completions.create(
                 model="translation-koen",
                 messages=[
                     {
@@ -238,17 +239,21 @@ async def translate_text(text: str, page: str, ocr_model: str, translate_model: 
                 anns = load_upstage_doc_annotations_from_file(
                     f"data/{page}_upstage_doc.json"
                 )["annotations"]
+            elif ocr_model == "patchify":
+                anns = load_upstage_annotations_from_file(
+                    f"data/{page}_upstage_patchify.json"
+                )["annotations"]
             else:
                 raise HTTPException(status_code=400, detail="Invalid model specified.")
 
             data = [ann["text"] for ann in anns]
 
-            clinet = OpenAI(
+            client = OpenAI(
                 api_key="up_3klEdFK7qwq5JOKBhHHKi5eGilHo3",
                 base_url="https://api.upstage.ai/v1",
             )
 
-            response = clinet.chat.completions.create(
+            response = client.chat.completions.create(
                 model="solar-mini",
                 messages=[
                     {
@@ -278,11 +283,11 @@ async def translate_text(text: str, page: str, ocr_model: str, translate_model: 
             return JSONResponse(content={"error": str(e)}, status_code=500)
     elif translate_model == "gcp-translation":
         try:
-            clinet = translate_v3.TranslationServiceClient()
+            client = translate_v3.TranslationServiceClient()
             project_id = "761591073995"
             parent = f"projects/{project_id}/locations/global"
 
-            response = clinet.translate_text(
+            response = client.translate_text(
                 contents=[text],
                 target_language_code="en-US",
                 parent=parent,

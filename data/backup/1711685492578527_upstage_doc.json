@@ -1,0 +1,184 @@
+﻿{
+    "api": "2.0",
+    "content": {
+        "html": "<h1 id='0' style='font-size:18px'>블루비뇨기과</h1>\n<h1 id='1' style='font-size:22px'>\"무도정관수술\"</h1>\n<br><p id='2' data-category='paragraph' style='font-size:16px'>간단하면서 가장 효과적이고<br>안전한 피임방법입니다.</p>\n<h1 id='3' style='font-size:14px'>블루비뇨기과 정관수술</h1>\n<h1 id='4' style='font-size:20px'>정관수술</h1>\n<br><p id='5' data-category='paragraph' style='font-size:14px'>정자가 생성되어 나오는 관(정관)을 3중으로 차단하는<br>현존 최고의 확률을 자랑하는 피임법.</p>",
+        "markdown": "# 블루비뇨기과\n\n# \"무도정관수술\"\n\n간단하면서 가장 효과적이고\n안전한 피임방법입니다.\n\n# 블루비뇨기과 정관수술\n\n# 정관수술\n\n정자가 생성되어 나오는 관(정관)을 3중으로 차단하는\n현존 최고의 확률을 자랑하는 피임법.",
+        "text": "블루비뇨기과\n\"무도정관수술\"\n간단하면서 가장 효과적이고\n안전한 피임방법입니다.\n블루비뇨기과 정관수술\n정관수술\n정자가 생성되어 나오는 관(정관)을 3중으로 차단하는\n현존 최고의 확률을 자랑하는 피임법."
+    },
+    "elements": [
+        {
+            "category": "heading1",
+            "content": {
+                "html": "<h1 id='0' style='font-size:18px'>블루비뇨기과</h1>",
+                "markdown": "# 블루비뇨기과",
+                "text": "블루비뇨기과"
+            },
+            "coordinates": [
+                {
+                    "x": 0.0435,
+                    "y": 0.023
+                },
+                {
+                    "x": 0.349,
+                    "y": 0.023
+                },
+                {
+                    "x": 0.349,
+                    "y": 0.0591
+                },
+                {
+                    "x": 0.0435,
+                    "y": 0.0591
+                }
+            ],
+            "id": 0,
+            "page": 1
+        },
+        {
+            "category": "heading1",
+            "content": {
+                "html": "<h1 id='1' style='font-size:22px'>\"무도정관수술\"</h1>",
+                "markdown": "# \"무도정관수술\"",
+                "text": "\"무도정관수술\""
+            },
+            "coordinates": [
+                {
+                    "x": 0.1025,
+                    "y": 0.1456
+                },
+                {
+                    "x": 0.8927,
+                    "y": 0.1456
+                },
+                {
+                    "x": 0.8927,
+                    "y": 0.2242
+                },
+                {
+                    "x": 0.1025,
+                    "y": 0.2242
+                }
+            ],
+            "id": 1,
+            "page": 1
+        },
+        {
+            "category": "paragraph",
+            "content": {
+                "html": "<br><p id='2' data-category='paragraph' style='font-size:16px'>간단하면서 가장 효과적이고<br>안전한 피임방법입니다.</p>",
+                "markdown": "간단하면서 가장 효과적이고\n안전한 피임방법입니다.",
+                "text": "간단하면서 가장 효과적이고\n안전한 피임방법입니다."
+            },
+            "coordinates": [
+                {
+                    "x": 0.2494,
+                    "y": 0.2477
+                },
+                {
+                    "x": 0.7453,
+                    "y": 0.2477
+                },
+                {
+                    "x": 0.7453,
+                    "y": 0.3234
+                },
+                {
+                    "x": 0.2494,
+                    "y": 0.3234
+                }
+            ],
+            "id": 2,
+            "page": 1
+        },
+        {
+            "category": "heading1",
+            "content": {
+                "html": "<h1 id='3' style='font-size:14px'>블루비뇨기과 정관수술</h1>",
+                "markdown": "# 블루비뇨기과 정관수술",
+                "text": "블루비뇨기과 정관수술"
+            },
+            "coordinates": [
+                {
+                    "x": 0.1233,
+                    "y": 0.6428
+                },
+                {
+                    "x": 0.4828,
+                    "y": 0.6428
+                },
+                {
+                    "x": 0.4828,
+                    "y": 0.6762
+                },
+                {
+                    "x": 0.1233,
+                    "y": 0.6762
+                }
+            ],
+            "id": 3,
+            "page": 1
+        },
+        {
+            "category": "heading1",
+            "content": {
+                "html": "<h1 id='4' style='font-size:20px'>정관수술</h1>",
+                "markdown": "# 정관수술",
+                "text": "정관수술"
+            },
+            "coordinates": [
+                {
+                    "x": 0.388,
+                    "y": 0.8532
+                },
+                {
+                    "x": 0.6112,
+                    "y": 0.8532
+                },
+                {
+                    "x": 0.6112,
+                    "y": 0.8964
+                },
+                {
+                    "x": 0.388,
+                    "y": 0.8964
+                }
+            ],
+            "id": 4,
+            "page": 1
+        },
+        {
+            "category": "paragraph",
+            "content": {
+                "html": "<br><p id='5' data-category='paragraph' style='font-size:14px'>정자가 생성되어 나오는 관(정관)을 3중으로 차단하는<br>현존 최고의 확률을 자랑하는 피임법.</p>",
+                "markdown": "정자가 생성되어 나오는 관(정관)을 3중으로 차단하는\n현존 최고의 확률을 자랑하는 피임법.",
+                "text": "정자가 생성되어 나오는 관(정관)을 3중으로 차단하는\n현존 최고의 확률을 자랑하는 피임법."
+            },
+            "coordinates": [
+                {
+                    "x": 0.1667,
+                    "y": 0.9096
+                },
+                {
+                    "x": 0.8298,
+                    "y": 0.9096
+                },
+                {
+                    "x": 0.8298,
+                    "y": 0.9693
+                },
+                {
+                    "x": 0.1667,
+                    "y": 0.9693
+                }
+            ],
+            "id": 5,
+            "page": 1
+        }
+    ],
+    "merged_elements": [],
+    "model": "document-parse-250116",
+    "ocr": true,
+    "usage": {
+        "pages": 1
+    }
+}
